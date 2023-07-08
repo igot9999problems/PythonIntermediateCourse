@@ -22,6 +22,3 @@ with ManagedFile('notes2.txt') as file:
     print("Doing stuff...")
     file.write("something")
 print("Continuing")
-
-
-# Finally finished the Python intermediate tutorial! Finished on 7/5/2023 at 7:54 PM, nice!
