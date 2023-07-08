@@ -1,0 +1,100 @@
+import threading
+import time
+import queue
+
+# A global variable
+database_value = 0
+
+# If you use this as the target method for both threads without the lock argument, you will see that the end value is 1 and not 2. 
+# This is because when thread1 enters the waiting period, then thread2 start going. (thread1 and thread2 have been started, 
+# but only one thread can be run at a time, so thread 2 is on a "waitlist") So what effectively happens is that the local_copy 
+# variable for both threads starts at 0. This is known as a race condition, when 2 or more threads try to modify the same variable 
+# at the same time.
+def increase(lock):
+    # This line is to be able to use the global variable database_value. Functions can't modify global variables by default 
+    # unless you declare it like this.
+    global database_value
+
+    lock.acquire()
+    local_copy = database_value
+
+    local_copy += 1
+    time.sleep(0.1)
+
+    database_value = local_copy
+    lock.release()
+
+    # Also could use the lock as a context manager, like this:
+    # with lock:
+    #   local_copy = database_value
+    #   local_copy += 1
+    #   time.sleep(0.1)
+    #   database_value = local_copy
+    # No need for lock.acquire() or lock.release(), this does it automatically
+
+def worker(queue_obj):
+    while True:
+        value = queue_obj.get()
+        print(f"In {threading.current_thread().name} got {value}")
+        queue_obj.task_done()
+
+# We write the main code using multithreading in here to avoid an infinite loop issue
+if __name__ == "__main__":
+
+    the_epic_lock = threading.Lock()
+
+    print(f"Start value is {database_value}")
+
+    thread1 = threading.Thread(target=increase, args=(the_epic_lock,))
+    thread2 = threading.Thread(target=increase, args=(the_epic_lock,))
+
+    thread1.start()
+    thread2.start()
+
+    thread1.join()
+    thread2.join()
+
+    print(f"End value is {database_value}")
+    print("End threading")
+    print()
+
+
+    # A queue is a data structure object that follows the FIFO structure: First In, First out. Like a queue in real life.
+    q = queue.Queue()
+
+    q.put(1)
+    q.put(2)
+    q.put(3)
+    # 3, 2, 1 <---- the front of the queue
+
+    first_value = q.get()
+    print(first_value)
+    print(q.empty())
+    print()
+
+    # Use this when you are done using a queue
+    q.task_done()
+
+    # Use this to block the queue from other threads until it has been completely processed (until all elements have been gotten)
+    # q.join()
+
+    # Lets use a queue in threading
+
+    threading_q = queue.Queue()
+
+    num_threads = 10
+
+    for i in range(num_threads):
+        thread = threading.Thread(target=worker, args=(threading_q,))
+        # Daemon threads stop running when the main thread stops running. So when the program reaches the "End Queue Threading" 
+        # print statement, then the main thread dies (The main thread is running the python program), so then the  
+        # daemon threads also stop running
+        thread.daemon=True
+        thread.start()
+    
+    for i in range(1, 21):
+        threading_q.put(i)
+    
+    threading_q.join()
+
+    print("End Queue threading")

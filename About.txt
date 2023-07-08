@@ -1,0 +1,5 @@
+This folder contains code that I wrote for later reference.
+The tutorial I used is FreeCodeCamp's video, Python Intermediate Programming.
+https://www.youtube.com/watch?v=HGOBQPFzWKo&list=WL&index=3
+
+Started on 6/8/2023
